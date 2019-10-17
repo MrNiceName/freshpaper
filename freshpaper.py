@@ -135,9 +135,7 @@ def download_image(download_dir, image_extension="jpg"):
     """
     # mkt(s) HIN, EN-IN
 
-   # url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"
     url = select_source()
-
     try:
         image_data = json.loads(urlopen(url).read().decode("utf-8"))
 
@@ -170,11 +168,11 @@ def download_image(download_dir, image_extension="jpg"):
     except URLError:
         log.error("Something went wrong.\nThere may be internet issues, or the source is invalid.")
         raise ConnectionError
-
+        
 def get_source_list():
     try:
         sources_list = open("sources.txt","r")
-        log.info("sources file found!")
+        log.info("sources file found!\n")
     except FileNotFoundError:
         log.info("No sources file found, creating it.")
         try: 
@@ -187,18 +185,20 @@ def get_source_list():
         log.error("Something went wrong while opening the sources file. Using Bing as a fallback.")
         return "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN" 
     sources_available = []
-    for line in sources_list:
+    for line in sources_list: #FIXME: This fails with IndexError unless sources.txt has a bunch of newlines
         is_comment = False
         x = sources_list.readline()
         if (x[0]=='#'):
             is_comment = True
         else:
-            sources_available.insert(0,x[0:-2])
+            sources_available.insert(0,x)
     if (sources_available == []):
         log.info("sources file is empty! Adding default source...")
+        sources_list.close()
         sources_list = open("sources.txt", "w")
         sources_list.write("# Enter a URL on each line to add a source to the selector. Lines starting with # are comments.\n")
         sources_list.write("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN\n")
+        sources_list.close()
         return "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"
     return sources_available
 
@@ -212,7 +212,7 @@ def select_source():
             log.info(str(x) + ": " + sources_available[x])
         while (True == True):
             try:
-                selected_source = sources_available[int(input("Enter selection: "))]
+                selected_source = sources_available[int(input("Enter source selection: "))]
                 return selected_source
             except:
                 log.error("Input error.")
