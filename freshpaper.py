@@ -135,7 +135,8 @@ def download_image(download_dir, image_extension="jpg"):
     """
     # mkt(s) HIN, EN-IN
 
-    url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"
+   # url = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"
+    url = select_source()
 
     try:
         image_data = json.loads(urlopen(url).read().decode("utf-8"))
@@ -167,9 +168,54 @@ def download_image(download_dir, image_extension="jpg"):
             urlretrieve(image_url, filename=image_path)
         return image_path
     except URLError:
-        log.error("Something went wrong..\nMaybe Internet is not working...")
+        log.error("Something went wrong.\nThere may be internet issues, or the source is invalid.")
         raise ConnectionError
 
+def get_source_list():
+    try:
+        sources_list = open("sources.txt","r")
+        log.info("sources file found!")
+    except FileNotFoundError:
+        log.info("No sources file found, creating it.")
+        try: 
+            sources_list = open("sources.txt","w")
+            sources_list.write("# Enter a URL on each line to add a source to the selector. Lines starting with # are comments.\nhttp://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN\n")
+        except:
+            log.error("The sources file couldn't be created. You may lack the permission to create it. Using Bing as a fallback.")
+            return "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"
+    except:
+        log.error("Something went wrong while opening the sources file. Using Bing as a fallback.")
+        return "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN" 
+    sources_available = []
+    for line in sources_list:
+        is_comment = False
+        x = sources_list.readline()
+        if (x[0]=='#'):
+            is_comment = True
+        else:
+            sources_available.insert(0,x[0:-2])
+    if (sources_available == []):
+        log.info("sources file is empty! Adding default source...")
+        sources_list = open("sources.txt", "w")
+        sources_list.write("# Enter a URL on each line to add a source to the selector. Lines starting with # are comments.\n")
+        sources_list.write("http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN\n")
+        return "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"
+    return sources_available
+
+def select_source():
+    sources_available = get_source_list()
+    if (sources_available == "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN"):
+        return sources_available
+    else:
+        x = 0
+        for x in range(len(sources_available)):
+            log.info(str(x) + ": " + sources_available[x])
+        while (True == True):
+            try:
+                selected_source = sources_available[int(input("Enter selection: "))]
+                return selected_source
+            except:
+                log.error("Input error.")
 
 def main():
     dir_name = get_wallpaper_directory()  # Wallpaper directory name

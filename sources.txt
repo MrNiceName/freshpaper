@@ -1,0 +1,2 @@
+# Enter a URL on each line to add a source to the selector. Lines starting with # are comments.
+http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=EN-IN
